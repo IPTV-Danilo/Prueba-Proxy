@@ -1,46 +1,65 @@
 import asyncio
 from playwright.async_api import async_playwright
+from proxy_system import get_working_proxy
 
 URL = "https://streamtpnew.com/global1.php?stream=espn"
 
-async def capture_m3u8():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+async def intentar_captura(proxy):
+    try:
+        print(f"🌐 Usando proxy: {proxy}")
 
-        context = await browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-        )
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                proxy={"server": proxy} if proxy else None
+            )
 
-        page = await context.new_page()
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            )
 
-        m3u8_links = []
+            page = await context.new_page()
 
-        # escuchar requests
-        page.on("request", lambda request: (
-            m3u8_links.append(request.url)
-            if ".m3u8" in request.url else None
-        ))
+            m3u8_links = []
 
-        print("Abriendo página...")
-        await page.goto(URL, timeout=60000)
+            page.on("request", lambda request: (
+                m3u8_links.append(request.url)
+                if ".m3u8" in request.url else None
+            ))
 
-        # esperar que cargue el player
-        await page.wait_for_timeout(15000)
+            await page.goto(URL, timeout=60000)
+            await page.wait_for_timeout(15000)
 
-        await browser.close()
+            await browser.close()
 
-        return m3u8_links
+            return m3u8_links
+
+    except Exception as e:
+        print(f"❌ Error con proxy {proxy}: {e}")
+        return []
 
 
 async def main():
-    links = await capture_m3u8()
+    print("🚀 Iniciando captura...")
 
-    if links:
-        print("🎯 M3U8 encontrados:")
-        for l in links:
-            print(l)
-    else:
-        print("❌ No se encontró ningún m3u8")
+    for intento in range(5):  # reintentos
+        print(f"\n🔁 Intento {intento + 1}")
+
+        proxy = get_working_proxy()
+
+        if not proxy:
+            print("❌ No se encontró proxy válido")
+            continue
+
+        links = await intentar_captura(proxy)
+
+        if links:
+            print("\n🎯 M3U8 ENCONTRADOS:")
+            for l in links:
+                print(l)
+            return
+
+    print("\n💣 No se pudo capturar ningún m3u8")
 
 
 if __name__ == "__main__":
