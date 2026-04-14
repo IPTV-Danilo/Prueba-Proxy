@@ -1,4 +1,4 @@
-name: Capture M3U8
+name: Capture M3U8 PRO
 
 on:
   workflow_dispatch:
@@ -21,5 +21,5 @@ jobs:
         pip install -r requirements.txt
         playwright install
 
-    - name: Ejecutar script
+    - name: Ejecutar captura
       run: python capture.py
