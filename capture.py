@@ -24,22 +24,22 @@ async def intentar_captura(proxy):
 
             m3u8_links = []
 
-            # 🔥 CAPTURAR REQUESTS
+            # capturar requests
             page.on("request", lambda request: (
                 m3u8_links.append(request.url)
                 if ".m3u8" in request.url else None
             ))
 
-            # 🔥 CAPTURAR RESPONSES (MUY IMPORTANTE)
+            # capturar responses
             page.on("response", lambda response: (
                 m3u8_links.append(response.url)
                 if ".m3u8" in response.url else None
             ))
 
             print("🌍 Abriendo página...")
-            await page.goto(URL, timeout=60000)
+            await page.goto(URL, timeout=60000, wait_until="domcontentloaded")
 
-            # 🔥 esperar más tiempo (clave)
+            # esperar carga
             await page.wait_for_timeout(25000)
 
             await browser.close()
@@ -56,7 +56,7 @@ async def main():
 
     all_links = []
 
-    for intento in range(5):
+    for intento in range(7):  # más intentos
         print(f"\n🔁 Intento {intento + 1}")
 
         proxy = get_working_proxy()
@@ -70,7 +70,6 @@ async def main():
         if links:
             all_links.extend(links)
 
-    # 🔥 eliminar duplicados
     all_links = list(set(all_links))
 
     if all_links:
@@ -81,7 +80,6 @@ async def main():
         generar_m3u(all_links)
     else:
         print("\n💣 NO SE ENCONTRARON M3U8")
-        # 🔥 generar archivo vacío para debug
         generar_m3u([])
 
 
