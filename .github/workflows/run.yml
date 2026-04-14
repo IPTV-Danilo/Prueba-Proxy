@@ -9,23 +9,23 @@ jobs:
 
     steps:
     - name: Clonar repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Instalar Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: "3.10"
 
     - name: Instalar dependencias
       run: |
         pip install -r requirements.txt
-        playwright install
+        playwright install --with-deps
 
     - name: Ejecutar script
       run: python capture.py
 
     - name: Subir lista M3U
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: lista-m3u
         path: lista.m3u
