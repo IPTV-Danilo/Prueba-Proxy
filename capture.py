@@ -1,6 +1,7 @@
 import asyncio
 from playwright.async_api import async_playwright
 from proxy_system import get_working_proxy
+from m3u_generator import generar_m3u
 
 URL = "https://streamtpnew.com/global1.php?stream=espn"
 
@@ -32,7 +33,7 @@ async def intentar_captura(proxy):
 
             await browser.close()
 
-            return m3u8_links
+            return list(set(m3u8_links))
 
     except Exception as e:
         print(f"❌ Error con proxy {proxy}: {e}")
@@ -42,7 +43,7 @@ async def intentar_captura(proxy):
 async def main():
     print("🚀 Iniciando captura...")
 
-    for intento in range(5):  # reintentos
+    for intento in range(5):
         print(f"\n🔁 Intento {intento + 1}")
 
         proxy = get_working_proxy()
@@ -57,6 +58,8 @@ async def main():
             print("\n🎯 M3U8 ENCONTRADOS:")
             for l in links:
                 print(l)
+
+            generar_m3u(links)
             return
 
     print("\n💣 No se pudo capturar ningún m3u8")
