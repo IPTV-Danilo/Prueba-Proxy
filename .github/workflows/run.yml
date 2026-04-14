@@ -1,4 +1,4 @@
-name: Capture M3U8 PRO
+name: Capture M3U8 + M3U
 
 on:
   workflow_dispatch:
@@ -21,5 +21,11 @@ jobs:
         pip install -r requirements.txt
         playwright install
 
-    - name: Ejecutar captura
+    - name: Ejecutar script
       run: python capture.py
+
+    - name: Subir lista M3U
+      uses: actions/upload-artifact@v3
+      with:
+        name: lista-m3u
+        path: lista.m3u
