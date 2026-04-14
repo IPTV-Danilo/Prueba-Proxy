@@ -16,7 +16,7 @@ async def intentar_captura(proxy):
             )
 
             context = await browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                user_agent="Mozilla/5.0",
                 locale="es-AR"
             )
 
@@ -24,17 +24,23 @@ async def intentar_captura(proxy):
 
             m3u8_links = []
 
-            # capturar requests
+            # 🔥 CAPTURAR REQUESTS
             page.on("request", lambda request: (
                 m3u8_links.append(request.url)
                 if ".m3u8" in request.url else None
             ))
 
+            # 🔥 CAPTURAR RESPONSES (MUY IMPORTANTE)
+            page.on("response", lambda response: (
+                m3u8_links.append(response.url)
+                if ".m3u8" in response.url else None
+            ))
+
             print("🌍 Abriendo página...")
             await page.goto(URL, timeout=60000)
 
-            # esperar carga del player
-            await page.wait_for_timeout(15000)
+            # 🔥 esperar más tiempo (clave)
+            await page.wait_for_timeout(25000)
 
             await browser.close()
 
@@ -48,6 +54,8 @@ async def intentar_captura(proxy):
 async def main():
     print("🚀 Iniciando captura...")
 
+    all_links = []
+
     for intento in range(5):
         print(f"\n🔁 Intento {intento + 1}")
 
@@ -60,14 +68,21 @@ async def main():
         links = await intentar_captura(proxy)
 
         if links:
-            print("\n🎯 M3U8 ENCONTRADOS:")
-            for l in links:
-                print(l)
+            all_links.extend(links)
 
-            generar_m3u(links)
-            return
+    # 🔥 eliminar duplicados
+    all_links = list(set(all_links))
 
-    print("\n💣 No se pudo capturar ningún m3u8")
+    if all_links:
+        print("\n🎯 M3U8 ENCONTRADOS:")
+        for l in all_links:
+            print(l)
+
+        generar_m3u(all_links)
+    else:
+        print("\n💣 NO SE ENCONTRARON M3U8")
+        # 🔥 generar archivo vacío para debug
+        generar_m3u([])
 
 
 if __name__ == "__main__":
