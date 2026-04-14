@@ -1,10 +1,9 @@
 import requests
-from bs4 import BeautifulSoup
 import random
 
 TIMEOUT = 5
 
-def get_proxies_proxyscrape():
+def get_proxies():
     url = "https://api.proxyscrape.com/v2/?request=getproxies&country=AR&protocol=http&timeout=5000"
     try:
         r = requests.get(url, timeout=10)
@@ -24,10 +23,10 @@ def test_proxy(proxy):
         return False
 
 def get_working_proxy():
-    proxies = get_proxies_proxyscrape()
+    proxies = get_proxies()
     random.shuffle(proxies)
 
-    for p in proxies[:20]:  # probar solo algunos
+    for p in proxies[:30]:
         print(f"Testing proxy: {p}")
         if test_proxy(p):
             print(f"✔ Proxy OK: {p}")
