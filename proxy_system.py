@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import random
 
-TIMEOUT = 5
+TIMEOUT = 8
 
 # =========================
 # FUENTE 1: ProxyScrape
@@ -16,28 +16,7 @@ def get_proxies_proxyscrape():
         return []
 
 # =========================
-# FUENTE 2: Proxy5
-# =========================
-def get_proxies_proxy5():
-    url = "https://proxy5.net/free-proxy/argentina"
-    proxies = []
-    try:
-        r = requests.get(url, timeout=10)
-        soup = BeautifulSoup(r.text, "html.parser")
-        rows = soup.select("table tbody tr")
-
-        for row in rows:
-            cols = row.find_all("td")
-            if len(cols) > 1:
-                ip = cols[0].text.strip()
-                port = cols[1].text.strip()
-                proxies.append(f"http://{ip}:{port}")
-    except:
-        pass
-    return proxies
-
-# =========================
-# FUENTE 3: Free-Proxy.cz
+# FUENTE 2: Free-Proxy.cz
 # =========================
 def get_proxies_freeproxycz():
     url = "http://free-proxy.cz/es/proxylist/country/AR/all/ping/all"
@@ -58,16 +37,32 @@ def get_proxies_freeproxycz():
     return proxies
 
 # =========================
-# TESTEO REAL (AR)
+# TEST REAL (IP + NAVEGACIÓN)
 # =========================
 def test_proxy(proxy):
     try:
+        # 1. verificar IP Argentina
         r = requests.get(
             "https://ipinfo.io/json",
             proxies={"http": proxy, "https": proxy},
             timeout=TIMEOUT
         )
-        return r.json().get("country") == "AR"
+
+        if r.json().get("country") != "AR":
+            return False
+
+        # 2. verificar navegación real
+        r2 = requests.get(
+            "https://www.google.com",
+            proxies={"http": proxy, "https": proxy},
+            timeout=TIMEOUT
+        )
+
+        if r2.status_code == 200:
+            return True
+
+        return False
+
     except:
         return False
 
@@ -76,17 +71,9 @@ def test_proxy(proxy):
 # =========================
 def get_all_proxies():
     proxies = []
-
-    print("🔎 Obteniendo ProxyScrape...")
     proxies += get_proxies_proxyscrape()
-
-    print("🔎 Obteniendo Proxy5...")
-    proxies += get_proxies_proxy5()
-
-    print("🔎 Obteniendo FreeProxy...")
     proxies += get_proxies_freeproxycz()
 
-    # eliminar duplicados
     proxies = list(set(proxies))
 
     print(f"📊 Total proxies recolectados: {len(proxies)}")
@@ -96,11 +83,11 @@ def get_working_proxy():
     proxies = get_all_proxies()
     random.shuffle(proxies)
 
-    for p in proxies[:40]:  # probamos más proxies
-        print(f"🧪 Testing: {p}")
+    for p in proxies[:50]:  # más intentos
+        print(f"🧪 Testing real: {p}")
         if test_proxy(p):
-            print(f"✅ Proxy ARG válido: {p}")
+            print(f"✅ Proxy FUNCIONAL: {p}")
             return p
 
-    print("❌ No se encontró proxy válido")
+    print("❌ No hay proxy funcional")
     return None
